@@ -1,0 +1,2 @@
+# Aniqfan
+AniqQishloqXo'jaligi
