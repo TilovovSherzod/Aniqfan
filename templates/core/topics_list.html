@@ -1,0 +1,21 @@
+{% extends "base_fragment.html" %}
+{% block content %}
+	<div class="container">
+		<h2>Mavzular</h2>
+		<p>
+			{% if user.is_staff or user.is_superuser %}
+				<a class="btn" href="{% url 'core:topic_add' %}">Yangi mavzu qo'shish</a>
+			{% endif %}
+		</p>
+		<ul class="resource-list">
+			{% for topic in topics %}
+				<li>
+					<a href="{% url 'core:topic_detail' topic.pk %}">{{ topic.title }}</a>
+					<small>{{ topic.created_at|date:'Y-m-d' }}</small>
+				</li>
+			{% empty %}
+				<li>Hozircha mavzular mavjud emas.</li>
+			{% endfor %}
+		</ul>
+	</div>
+{% endblock %}

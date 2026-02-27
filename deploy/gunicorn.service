@@ -1,0 +1,13 @@
+[Unit]
+Description=gunicorn daemon for sayt
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/home/www-data/sayt
+EnvironmentFile=/home/www-data/sayt/.env
+ExecStart=/home/www-data/sayt/.venv/bin/gunicorn --workers 3 --bind unix:/run/gunicorn.sock config.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

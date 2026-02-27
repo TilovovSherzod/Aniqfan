@@ -1,0 +1,100 @@
+{% extends "base_fragment.html" %}
+{% block content %}
+  <div class="container">
+    <h2>{% if question %}Savolni tahrirlash{% else %}Yangi savol{% endif %} — {{ test.title }}</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        {{ form.as_p }}
+      </div>
+
+      <h4>Javob variantlari</h4>
+      <div id="choices">
+        {{ formset.management_form }}
+        {% for f in formset.forms %}
+          <div class="choice-row" data-index="{{ forloop.counter0 }}">
+            <label>Variant {{ forloop.counter }}:</label>
+            {{ f.text }}
+            <!-- radio shown to user; real boolean stored in hidden/checkbox is_correct input rendered by Django -->
+            <input type="radio" name="correct_choice" class="choice-radio" data-index="{{ forloop.counter0 }}" {% if f.instance.is_correct %}checked{% endif %} />
+            {{ f.is_correct }}
+            {{ f.id }}
+            {% if f.DELETE %}
+              {{ f.DELETE }}
+              <label class="ml-2">O'chirish</label>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="mt-2">
+        <button id="add-choice" type="button" class="btn">Yangi variant qo'shish</button>
+      </div>
+
+      <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Saqlash</button>
+        <a class="btn btn-secondary" href="{% url 'core:test_detail' pk=test.pk %}">Bekor</a>
+      </div>
+    </form>
+  </div>
+
+<script>
+(function(){
+  // Helper to update TOTAL_FORMS when cloning
+  function updateTotalForms(delta){
+    var total = document.querySelector('#id_' + '{{ formset.prefix }}' + '-TOTAL_FORMS');
+    if(!total) return;
+    total.value = parseInt(total.value,10) + delta;
+  }
+
+  // Convert Django checkbox inputs to hidden initially to avoid double UI
+  document.addEventListener('DOMContentLoaded', function(){
+    var container = document.getElementById('choices');
+    var prefix = '{{ formset.prefix }}';
+    // wire radios to set the corresponding is_correct checkbox
+    function wireRadios(){
+      var radios = container.querySelectorAll('.choice-radio');
+      radios.forEach(function(r){
+        r.addEventListener('change', function(){
+          // clear all is_correct
+          var checkboxes = container.querySelectorAll('input[name$="-is_correct"]');
+          checkboxes.forEach(function(cb){ cb.checked = false; });
+          // set corresponding checkbox
+          var idx = r.getAttribute('data-index');
+          var cb = container.querySelector('input[name="' + prefix + '-' + idx + '-is_correct"]');
+          if(cb){ cb.checked = true; }
+        });
+      });
+    }
+    wireRadios();
+
+      document.getElementById('add-choice').addEventListener('click', function(){
+      // find TOTAL_FORMS
+      var total = document.querySelector('#id_' + prefix + '-TOTAL_FORMS');
+      var cur = parseInt(total.value,10);
+      // build a new row from empty_form rendered by Django (we'll ask server render empty_form instead)
+      // Fallback: create minimal inputs
+      var row = document.createElement('div');
+      row.className = 'choice-row';
+      row.setAttribute('data-index', cur);
+      row.innerHTML = '<label>Variant ' + (cur+1) + ':</label> ' +
+        '<input type="text" name="' + prefix + '-' + cur + '-text" maxlength="512" /> ' +
+        '<input type="radio" name="correct_choice" class="choice-radio" data-index="' + cur + '" />' +
+        '<input type="checkbox" name="' + prefix + '-' + cur + '-is_correct" style="display:none" />' +
+        '<input type="hidden" name="' + prefix + '-' + cur + '-id" value="" />';
+      container.appendChild(row);
+      total.value = cur + 1;
+      wireRadios();
+    });
+  });
+})();
+</script>
+
+<style>
+.choice-row{ margin-bottom: .5rem; }
+.choice-row input[type="text"]{ width: 60%; }
+.choice-row input[type="radio"]{ margin-left: .5rem; }
+/* hide the auto-rendered is_correct checkboxes (we use radio control) */
+.choice-row input[name$='-is_correct']{ display: none; }
+</style>
+{% endblock %}

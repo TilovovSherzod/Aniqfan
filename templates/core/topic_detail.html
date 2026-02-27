@@ -1,0 +1,21 @@
+{% extends "base_fragment.html" %}
+{% block content %}
+	<div class="container">
+		<h2>{{ topic.title }}</h2>
+		{% if topic.description %}
+			<p>{{ topic.description }}</p>
+		{% endif %}
+		{% if topic.content %}
+			<div class="section-card">
+				{{ topic.content|linebreaks }}
+			</div>
+		{% endif %}
+		{% if topic.url %}
+			<p><a class="btn btn-accent-outline btn-sm" href="{{ topic.url }}" target="_blank" rel="noopener">Havolani ochish</a></p>
+		{% endif %}
+		{% if topic.file %}
+			<p><a class="btn btn-accent-outline btn-sm" href="{% url 'core:topic_download' topic.pk %}">Faylni yuklab olish</a></p>
+		{% endif %}
+		<p><a href="{% url 'core:topics_list' %}">Ortga</a></p>
+	</div>
+{% endblock %}
